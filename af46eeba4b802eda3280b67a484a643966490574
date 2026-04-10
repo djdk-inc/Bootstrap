@@ -1,0 +1,45 @@
+templates/python-web-template/.env.example
+  5e5472691e1f4886 1-2
+templates/python-web-template/app/auth.py
+  5e5472691e1f4886 1-10
+templates/python-web-template/requirements.txt
+  5e5472691e1f4886 1-2
+templates/python-web-template/railway.toml
+  5e5472691e1f4886 1-6
+templates/python-web-template/app/main.py
+  5e5472691e1f4886 1-14
+README.md
+  5e5472691e1f4886 3,5,7,9,11-14,16,18-19,21,23-24,27,35,39,42,44-45,49-55,58,60-67,69,71
+templates/python-web-template/app/settings.py
+  5e5472691e1f4886 1-8
+bootstrap_service/main.py
+  5e5472691e1f4886 1-125
+bootstrap_service/requirements.txt
+  5e5472691e1f4886 1-3
+templates/python-web-template/TECH_SPEC.md
+  5e5472691e1f4886 1-18
+setup.sh
+  5e5472691e1f4886 1-43
+templates/python-web-template/README.md
+  5e5472691e1f4886 1-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "af46eeba4b802eda3280b67a484a643966490574",
+  "prompts": {
+    "5e5472691e1f4886": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dc6f36a9-36e4-4c0d-9ea2-61a7ae1d4e2a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 662,
+      "total_deletions": 1623,
+      "accepted_lines": 282,
+      "overriden_lines": 0
+    }
+  }
+}
