@@ -1,0 +1,38 @@
+bootstrap_service/main.py
+  933b4cb8da04b32a 221,230
+templates/github-repo-template/access.yaml
+  933b4cb8da04b32a 3-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "0ff6efa2f102173e03a91b1d90fc17b1e4dcdb04",
+  "prompts": {
+    "5e5472691e1f4886": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dc6f36a9-36e4-4c0d-9ea2-61a7ae1d4e2a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 427,
+      "overriden_lines": 0
+    },
+    "933b4cb8da04b32a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02192725-c52a-45be-83b8-806642744792",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 7,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
