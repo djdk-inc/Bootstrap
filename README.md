@@ -36,7 +36,6 @@ uvicorn main:app --reload --port 8000
 
 ```bash
 curl -X POST http://localhost:8000/create-app \
-  -H "Authorization: Bearer $BOOTSTRAP_SECRET" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "my-tool",
@@ -59,13 +58,12 @@ curl -X POST http://localhost:8000/create-app \
 
 | Variable | Purpose |
 |---|---|
-| `BOOTSTRAP_SECRET` | Bearer token callers must present |
 | `GITHUB_TOKEN` | PAT with `repo` scope |
-| `GITHUB_TEMPLATE_OWNER` | Owner of the template repos |
-| `GITHUB_DEFAULT_OWNER` | Owner for newly created repos |
-| `GITHUB_TEMPLATE_REPO_WEB` | Template repo name (default: `python-web-template`) |
+| `GITHUB_DEFAULT_OWNER` | Optional — owner for newly created repos; defaults to the authenticated user |
 | `RAILWAY_API_TOKEN` | Railway token |
 
 ## Templates
 
 - `python-web` — FastAPI app, `/healthz`, `railway.toml`, auth scaffold (`templates/python-web-template/`)
+- `python-task` — Minimal Python script, `railway.toml` with `python task/main.py` start command (`templates/python-task-template/`)
+- `telegram-bot` — python-telegram-bot app with `/start` and echo handler, `railway.toml` (`templates/telegram-bot-template/`)

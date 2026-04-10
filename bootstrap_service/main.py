@@ -4,15 +4,25 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 
-BOOTSTRAP_SECRET     = os.environ["BOOTSTRAP_SECRET"]
-GITHUB_TOKEN         = os.environ["GITHUB_TOKEN"]
-GITHUB_DEFAULT_OWNER = os.environ["GITHUB_DEFAULT_OWNER"]
-RAILWAY_API_TOKEN    = os.environ["RAILWAY_API_TOKEN"]
+GITHUB_TOKEN      = os.environ["GITHUB_TOKEN"]
+RAILWAY_API_TOKEN = os.environ["RAILWAY_API_TOKEN"]
+
+def _resolve_github_owner() -> str:
+    override = os.environ.get("GITHUB_DEFAULT_OWNER", "")
+    if override:
+        return override
+    return subprocess.run(
+        ["gh", "api", "user", "--jq", ".login"],
+        capture_output=True, text=True, check=True,
+        env={**os.environ, "GH_TOKEN": GITHUB_TOKEN},
+    ).stdout.strip()
+
+GITHUB_DEFAULT_OWNER = _resolve_github_owner()
 
 TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 
@@ -54,45 +64,50 @@ def create_github_repo(name: str) -> dict:
         extra_env={"GH_TOKEN": GITHUB_TOKEN})
     return {"full_name": full_name, "html_url": f"https://github.com/{full_name}"}
 
-def bootstrap_repo(repo_full_name: str, template: str, generated_files: dict[str, str]) -> None:
+def delete_github_repo(full_name: str) -> None:
+    try:
+        run(["gh", "repo", "delete", full_name, "--yes"],
+            extra_env={"GH_TOKEN": GITHUB_TOKEN})
+    except Exception:
+        pass  # best-effort cleanup
+
+def populate_dir(d: str, template: str, generated_files: dict[str, str]) -> None:
     code_template = TEMPLATE_MAP[template]
     repo_template = TEMPLATES_DIR / "github-repo-template"
+    shutil.copytree(str(repo_template), d, dirs_exist_ok=True)
+    shutil.copytree(str(code_template), d, dirs_exist_ok=True)
+    for path, content in generated_files.items():
+        dest = Path(d) / path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(content)
+
+def push_to_github(d: str, repo_full_name: str) -> None:
     git_env = {"GIT_AUTHOR_NAME": "bootstrap", "GIT_AUTHOR_EMAIL": "bootstrap@local",
                "GIT_COMMITTER_NAME": "bootstrap", "GIT_COMMITTER_EMAIL": "bootstrap@local"}
-
-    with tempfile.TemporaryDirectory() as d:
-        # Copy doc template then code template (code files win on conflict)
-        shutil.copytree(str(repo_template), d, dirs_exist_ok=True)
-        shutil.copytree(str(code_template), d, dirs_exist_ok=True)
-
-        # Overwrite with generated content
-        for path, content in generated_files.items():
-            dest = Path(d) / path
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_text(content)
-
-        # Init, commit, push
-        run(["git", "init"], cwd=d, extra_env=git_env)
-        run(["git", "symbolic-ref", "HEAD", "refs/heads/main"], cwd=d)
-        run(["git", "remote", "add", "origin", auth_clone_url(repo_full_name)], cwd=d)
-        run(["git", "add", "."], cwd=d, extra_env=git_env)
-        run(["git", "commit", "-m", "Bootstrap initial files"], cwd=d, extra_env=git_env)
-        run(["git", "push", "-u", "origin", "main"], cwd=d, extra_env=git_env)
+    run(["git", "init"], cwd=d, extra_env=git_env)
+    run(["git", "symbolic-ref", "HEAD", "refs/heads/main"], cwd=d)
+    run(["git", "remote", "add", "origin", auth_clone_url(repo_full_name)], cwd=d)
+    run(["git", "add", "."], cwd=d, extra_env=git_env)
+    run(["git", "commit", "-m", "Bootstrap initial files"], cwd=d, extra_env=git_env)
+    run(["git", "push", "-u", "origin", "main"], cwd=d, extra_env=git_env)
 
 # ── Railway ────────────────────────────────────────────────────────────────────
 
-def provision_railway(repo_full_name: str, app_name: str, env_vars: dict[str, str]) -> dict:
+def provision_railway(d: str, app_name: str, env_vars: dict[str, str]) -> dict:
     renv = {"RAILWAY_TOKEN": RAILWAY_API_TOKEN}
-    with tempfile.TemporaryDirectory() as d:
-        run(["git", "clone", auth_clone_url(repo_full_name), d])
-        run(["railway", "project", "create", "--name", app_name], cwd=d, extra_env=renv)
-        for key, value in env_vars.items():
-            run(["railway", "variables", "--set", f"{key}={value}"], cwd=d, extra_env=renv)
-        run(["railway", "up", "--detach"], cwd=d, extra_env=renv)
-        run(["railway", "domain"], cwd=d, extra_env=renv)
+    run(["railway", "project", "create", "--name", app_name], cwd=d, extra_env=renv)
+    for key, value in env_vars.items():
+        run(["railway", "variables", "--set", f"{key}={value}"], cwd=d, extra_env=renv)
+    run(["railway", "up", "--detach"], cwd=d, extra_env=renv)
+    domain = run(["railway", "domain"], cwd=d, extra_env=renv)
+    live_url = (
+        domain if domain.startswith("http")
+        else f"https://{domain}" if domain
+        else f"https://{app_name}.up.railway.app"
+    )
     # NOTE: one-time manual step — connect GitHub repo for auto-redeploy:
     #   Railway dashboard → Service → Settings → Source → GitHub → repo → branch main
-    return {"live_url": f"https://{app_name}.up.railway.app", "deploy_status": "deploying"}
+    return {"live_url": live_url, "deploy_status": "deploying"}
 
 # ── Generators ─────────────────────────────────────────────────────────────────
 
@@ -136,22 +151,22 @@ def healthz() -> dict:
     return {"status": "ok"}
 
 @app.post("/create-app", response_model=CreateAppResponse)
-def create_app(payload: CreateAppRequest, authorization: str | None = Header(default=None)):
-    if authorization != f"Bearer {BOOTSTRAP_SECRET}":
-        raise HTTPException(status_code=401, detail="Unauthorized")
+def create_app(payload: CreateAppRequest):
     if payload.template not in TEMPLATE_MAP:
         raise HTTPException(status_code=400, detail=f"Unknown template. Choose from: {list(TEMPLATE_MAP)}")
 
     repo = create_github_repo(payload.name)
-    bootstrap_repo(
-        repo_full_name=repo["full_name"],
-        template=payload.template,
-        generated_files={
-            "README.md":        make_readme(payload.name, payload.product_spec),
-            "IMPLEMENTATION.md": make_implementation(payload.name, payload.technical_notes),
-        },
-    )
-    railway = provision_railway(repo["full_name"], payload.name, payload.env_vars)
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            populate_dir(d, payload.template, {
+                "README.md":         make_readme(payload.name, payload.product_spec),
+                "IMPLEMENTATION.md": make_implementation(payload.name, payload.technical_notes),
+            })
+            push_to_github(d, repo["full_name"])
+            railway = provision_railway(d, payload.name, payload.env_vars)
+    except Exception:
+        delete_github_repo(repo["full_name"])
+        raise
 
     return CreateAppResponse(
         repo_url=repo["html_url"],

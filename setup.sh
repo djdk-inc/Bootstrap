@@ -32,10 +32,9 @@ pip install -q -r requirements.txt
 
 if [ ! -f .env ]; then
   cat > .env <<'EOF'
-BOOTSTRAP_SECRET=
 GITHUB_TOKEN=
-GITHUB_DEFAULT_OWNER=
 RAILWAY_API_TOKEN=
+# GITHUB_DEFAULT_OWNER=  # optional: override repo owner (defaults to authenticated user)
 EOF
   echo "Created bootstrap_service/.env — fill in your credentials before running."
 else
