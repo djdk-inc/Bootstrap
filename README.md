@@ -1,5 +1,10 @@
 # Bootstrap
 
+Templates live in https://github.com/djdk-inc/AppTemplate
+This repository is for the bootstrap MCP service itself
+- called by claude code from my phone
+
+
 Below is a copy-pastable build spec you can hand to Claude Code or Codex.
 
 ````md
