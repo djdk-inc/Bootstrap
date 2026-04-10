@@ -18,6 +18,12 @@ if [ ${#missing[@]} -gt 0 ]; then
   exit 1
 fi
 
+echo "Available templates:"
+for dir in templates/*/; do
+  echo "  - $(basename "$dir")"
+done
+
+echo ""
 echo "Setting up Python venv..."
 cd bootstrap_service
 python3 -m venv .venv
@@ -28,9 +34,7 @@ if [ ! -f .env ]; then
   cat > .env <<'EOF'
 BOOTSTRAP_SECRET=
 GITHUB_TOKEN=
-GITHUB_TEMPLATE_OWNER=
 GITHUB_DEFAULT_OWNER=
-GITHUB_TEMPLATE_REPO_WEB=python-web-template
 RAILWAY_API_TOKEN=
 EOF
   echo "Created bootstrap_service/.env — fill in your credentials before running."
