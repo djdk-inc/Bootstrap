@@ -1,3 +1,4 @@
 # Who can log in to this app.
 # Add or remove emails here and push to main — access updates automatically.
-allowed_emails: []
+allowed_emails:
+  - david.kim9325@gmail.com

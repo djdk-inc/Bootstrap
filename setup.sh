@@ -37,7 +37,6 @@ RAILWAY_API_TOKEN=
 CLOUDFLARE_API_TOKEN=
 CLOUDFLARE_ACCOUNT_ID=
 CLOUDFLARE_TEAM=
-OWNER_EMAIL=
 # GITHUB_DEFAULT_OWNER=  # optional: override repo owner (defaults to authenticated user)
 EOF
   echo "Created bootstrap_service/.env — fill in your credentials before running."
