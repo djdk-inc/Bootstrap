@@ -98,6 +98,7 @@ RAILWAY_API_TOKEN=
 CLOUDFLARE_API_TOKEN=
 CLOUDFLARE_ACCOUNT_ID=
 CLOUDFLARE_TEAM=
+OWNER_EMAIL=david.kim9325@gmail.com
 # GITHUB_DEFAULT_OWNER=   # optional: defaults to authenticated GitHub user
 ```
 

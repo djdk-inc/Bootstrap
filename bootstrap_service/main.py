@@ -16,6 +16,7 @@ RAILWAY_API_TOKEN     = os.environ["RAILWAY_API_TOKEN"]
 CLOUDFLARE_API_TOKEN  = os.environ["CLOUDFLARE_API_TOKEN"]
 CLOUDFLARE_ACCOUNT_ID = os.environ["CLOUDFLARE_ACCOUNT_ID"]
 CLOUDFLARE_TEAM       = os.environ["CLOUDFLARE_TEAM"]
+OWNER_EMAIL           = os.environ["OWNER_EMAIL"]
 
 def _resolve_github_owner() -> str:
     override = os.environ.get("GITHUB_DEFAULT_OWNER", "")
@@ -212,13 +213,14 @@ def create_app(payload: CreateAppRequest):
         raise HTTPException(status_code=400, detail=f"Unknown template. Choose from: {list(TEMPLATE_MAP)}")
 
     app_secret = secrets.token_hex(32)
+    allowed    = list({OWNER_EMAIL} | set(payload.allowed_emails))
     repo = create_github_repo(payload.name)
     try:
         with tempfile.TemporaryDirectory() as d:
             populate_dir(d, payload.template, {
                 "README.md":         make_readme(payload.name, payload.product_spec),
                 "IMPLEMENTATION.md": make_implementation(payload.name, payload.technical_notes),
-                "access.yaml":       make_access_yaml(payload.allowed_emails),
+                "access.yaml":       make_access_yaml(allowed),
             })
             push_to_github(d, repo["full_name"])
 
@@ -227,7 +229,7 @@ def create_app(payload: CreateAppRequest):
                 "APP_SECRET": app_secret,
             })
 
-            cf = provision_cloudflare(payload.name, railway["live_url"], payload.allowed_emails)
+            cf = provision_cloudflare(payload.name, railway["live_url"], allowed)
 
             set_railway_vars(d, railway["renv"], {
                 "CLOUDFLARE_AUD":  cf["aud"],
