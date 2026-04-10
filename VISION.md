@@ -100,6 +100,8 @@ Each tool that creates external resources requires HITL approval before executin
 
 **The bet.** A single developer with strong specs and a well-configured agent can punch above their weight, because the leverage comes from the specs compounding — not from headcount. The product power of these platforms is real; the goal is to capture it at the exploration phase and then bring the output into an environment you control for the long term.
 
+**Specs don't transfer to Replit.** You can paste context into a Replit Agent session and it'll follow it for that session. But there's no equivalent of CLAUDE.md, heuristics, skills, or persistent memory — no mechanism to say "here is how I want all my software built, always." You start from zero on every project. The conventions and preferences accumulated in `$CLAUDE_HOME` are a real compounding asset; they only work with an agent designed to load and follow them. Replit is a better cold-start for a throwaway prototype. Claude Code with your config is better for anything you intend to maintain, because the agent already knows how you work before you've typed a word.
+
 **The kill switch.** If Bootstrap starts growing into a general-purpose build platform — handling its own IDE, its own runtime, its own error UI — that's a signal it has converged to Replit. At that point, stop and use Replit. Invest the saved effort into whatever thin integrations are actually missing (spec injection, infra ownership, async loop). Never compete with a platform on its own terms.
 
 ---
