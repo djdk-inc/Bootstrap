@@ -1,0 +1,45 @@
+templates/telegram-bot-template/bot/main.py
+  5e5472691e1f4886 1-19
+templates/python-task-template/railway.toml
+  5e5472691e1f4886 1-5
+templates/telegram-bot-template/railway.toml
+  5e5472691e1f4886 1-6
+templates/python-task-template/task/main.py
+  5e5472691e1f4886 1-2,4,7-10,12-14
+templates/python-task-template/.env.example
+  5e5472691e1f4886 1
+bootstrap_service/main.py
+  5e5472691e1f4886 2,12-15,17-23,53-54,57-59,62,64-69,73-77,80,102-107,109-110,112-120,122,124,126-128,142-143,146-153
+templates/python-task-template/requirements.txt
+  5e5472691e1f4886 1
+templates/telegram-bot-template/requirements.txt
+  5e5472691e1f4886 1-2
+templates/telegram-bot-template/bot/handlers.py
+  5e5472691e1f4886 1-10
+.gitignore
+  5e5472691e1f4886 1
+setup.sh
+  5e5472691e1f4886 21-26
+templates/telegram-bot-template/.env.example
+  5e5472691e1f4886 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "850b8de9db390d4ae3a5462aa1abe3b47f96c415",
+  "prompts": {
+    "5e5472691e1f4886": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dc6f36a9-36e4-4c0d-9ea2-61a7ae1d4e2a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 983,
+      "total_deletions": 969,
+      "accepted_lines": 560,
+      "overriden_lines": 0
+    }
+  }
+}
