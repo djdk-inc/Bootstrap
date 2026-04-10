@@ -1,9 +1,6 @@
 import os
-from dotenv import load_dotenv
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 from handlers import start, echo
-
-load_dotenv()
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 
