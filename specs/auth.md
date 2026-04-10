@@ -81,6 +81,31 @@ def require_app_secret(x_app_secret: str | None = Header(default=None)):
 
 ---
 
+## User Onboarding
+
+This is the standard pattern for granting and revoking access to any app. There are no invite flows, no sign-up forms, no admin panels.
+
+**Granting access:** add an email to `access.yaml` in the app's repo and push to `main`. The GitHub Actions workflow fires, calls the Cloudflare API, and the user can log in within seconds.
+
+**Revoking access:** remove the email from `access.yaml` and push. Same flow.
+
+```yaml
+# access.yaml
+allowed_emails:
+  - you@gmail.com
+  - collaborator@gmail.com
+```
+
+Bootstrap wires this up automatically at provision time:
+1. Writes `access.yaml` with the initial `allowed_emails` from the `create_app` request
+2. Creates the Cloudflare Access Application + allow-list policy via API
+3. Adds `.github/workflows/sync-access.yml` to the repo (from the repo template)
+4. Sets `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_APP_ID`, and `CLOUDFLARE_POLICY_ID` as GitHub repo secrets
+
+After that, the app manages its own access list. Bootstrap is not involved in subsequent changes.
+
+---
+
 ## What This System Does Not Use
 
 - Passwords
