@@ -1,0 +1,25 @@
+templates/python-task-template/requirements.txt
+  5e5472691e1f4886 1
+templates/python-web-template/app/auth.py
+  5e5472691e1f4886 1,4,8,10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "171e47a392089bcbb59b745ec20b565312301e4d",
+  "prompts": {
+    "5e5472691e1f4886": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dc6f36a9-36e4-4c0d-9ea2-61a7ae1d4e2a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 22,
+      "accepted_lines": 433,
+      "overriden_lines": 0
+    }
+  }
+}
