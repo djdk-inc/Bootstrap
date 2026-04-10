@@ -1,0 +1,48 @@
+templates/telegram-bot-template/railpack.json
+  933b4cb8da04b32a 1-3
+specs/deployment.md
+  933b4cb8da04b32a 1-77
+INIT.md
+  933b4cb8da04b32a 1-137
+specs/auth.md
+  933b4cb8da04b32a 1-89
+templates/python-task-template/railpack.json
+  933b4cb8da04b32a 1-3
+specs/runner.md
+  933b4cb8da04b32a 1-72
+templates/python-web-template/railpack.json
+  933b4cb8da04b32a 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "88ff76bf8025b3680c8caae6037cb956b6073ac9",
+  "prompts": {
+    "5e5472691e1f4886": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dc6f36a9-36e4-4c0d-9ea2-61a7ae1d4e2a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 427,
+      "overriden_lines": 0
+    },
+    "933b4cb8da04b32a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02192725-c52a-45be-83b8-806642744792",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 384,
+      "total_deletions": 16,
+      "accepted_lines": 384,
+      "overriden_lines": 0
+    }
+  }
+}
