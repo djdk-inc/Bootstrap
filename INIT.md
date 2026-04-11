@@ -41,7 +41,7 @@ Create a Personal Access Token with `repo` scope:
 ## 3. Railway
 
 1. Create a Railway account at [railway.app](https://railway.app)
-2. Railway dashboard → Account Settings → Tokens → New Token
+2. Tokens: https://railway.com/account/tokens → New Token
 3. Copy the token → `RAILWAY_API_TOKEN` in `.env`
 
 ---
@@ -79,7 +79,7 @@ This is the only time you touch Google Cloud Console. All future apps authentica
 
 ### 4d. Create a Cloudflare API token
 
-Cloudflare dashboard → My Profile → API Tokens → Create Token.
+API tokens: https://dash.cloudflare.com/profile/api-tokens → Create Token.
 
 Use the **Edit Cloudflare Workers** template as a starting point, then:
 - Add permission: **Access: Apps and Policies** → Edit
