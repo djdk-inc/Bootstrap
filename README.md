@@ -64,3 +64,13 @@ Open `live_url` → Google login → in immediately.
 - `python-web` — FastAPI, Cloudflare JWT + app secret auth, Railway deploy
 - `python-task` — Click CLI, cron-friendly, Railway deploy
 - `telegram-bot` — python-telegram-bot with `/start` and echo handler
+
+## Design philosophy: scale to zero
+
+Every app Bootstrap provisions — webapps, crons, bots, reactive services — is assumed to have low, sporadic traffic. All provisioned services have `sleepApplication: true` set via the Railway API at creation time.
+
+**Why:** side projects and internal tools spend most of their life idle. Paying for always-on compute is waste. Scale-to-zero means you pay only when the service is actually handling a request.
+
+**Tradeoff:** first request after an idle period has a cold-start (~1–3s). For human-facing tools this is fine. For latency-sensitive integrations (e.g. Telegram webhooks) switch to polling, or disable sleep via `serviceInstanceUpdate`.
+
+**Feature request — automatic sleep config:** Bootstrap currently sets `sleepApplication: true` for all services. A future `/configure-scaling` endpoint should let you toggle this per-service post-deploy without going into the Railway dashboard.

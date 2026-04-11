@@ -167,7 +167,15 @@ def provision_railway(app_name: str, repo_full_name: str, env_vars: dict[str, st
             "variables":     env_vars,
         }})
 
-    # 4. Generate Railway-provided domain
+    # 4. Enable scale-to-zero (sleep when idle)
+    _railway_gql("""
+        mutation Sleep($environmentId: String!, $serviceId: String!) {
+            serviceInstanceUpdate(environmentId: $environmentId, serviceId: $serviceId,
+                input: { sleepApplication: true })
+        }
+    """, {"environmentId": env_id, "serviceId": service_id})
+
+    # 5. Generate Railway-provided domain
     domain = _railway_gql("""
         mutation CreateDomain($input: ServiceDomainCreateInput!) {
             serviceDomainCreate(input: $input) { domain }
