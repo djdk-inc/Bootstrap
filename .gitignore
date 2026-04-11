@@ -1,2 +1,4 @@
 .env
 bootstrap_service/.env
+__pycache__/
+*.pyc
