@@ -1,0 +1,36 @@
+INIT.md
+  933b4cb8da04b32a 65,67,71-74,76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "6001edd10c99c3be87e5a21f483f7f57e5ce4e9f",
+  "prompts": {
+    "5e5472691e1f4886": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dc6f36a9-36e4-4c0d-9ea2-61a7ae1d4e2a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 427,
+      "overriden_lines": 0
+    },
+    "933b4cb8da04b32a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02192725-c52a-45be-83b8-806642744792",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 9,
+      "total_deletions": 6,
+      "accepted_lines": 9,
+      "overriden_lines": 0
+    }
+  }
+}
