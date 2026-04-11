@@ -62,15 +62,18 @@ Free plan covers up to 50 users — sufficient for personal use.
 
 ### 4c. Connect Google as identity provider
 
-Zero Trust dashboard → Settings → Authentication → Add new → Google.
+**Cloudflare IdP settings:** https://dash.cloudflare.com/ced7308a086c99e265bda33237acbaca/one/integrations/identity-providers/edit/dfc447b5-93b0-462e-862a-8c44a4ab9516
+
+Integrations → Identity providers → Add → Google.
 
 You will need a Google OAuth client for this step only:
 
-1. [Google Cloud Console](https://console.cloud.google.com) → New project (or use existing)
-2. APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID
-3. Application type: **Web application**
-4. Authorized redirect URIs: `https://<your-team>.cloudflareaccess.com/cdn-cgi/access/callback`
-5. Copy Client ID and Client Secret → paste into Cloudflare Google IdP setup
+1. **Google Cloud Console credentials:** https://console.cloud.google.com/auth/clients?project=djdk-inc
+2. Create Credentials → OAuth 2.0 Client ID → Web application
+3. Authorized redirect URI: `https://djdk-inc.cloudflareaccess.com/cdn-cgi/access/callback`
+4. Copy the **Client ID** (ends in `.apps.googleusercontent.com`) and **Client Secret** → paste into Cloudflare App ID + Client secret fields
+
+Note: Google credentials can take up to a few hours to propagate after creation.
 
 This is the only time you touch Google Cloud Console. All future apps authenticate through Cloudflare; Google never sees them individually.
 
