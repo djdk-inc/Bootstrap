@@ -116,7 +116,17 @@ uvicorn main:app --reload --port 8000
 
 ---
 
-## 7. Verify
+## 7. Connect Railway to GitHub (per app, one-time)
+
+After Bootstrap provisions a new app, connect it to GitHub for auto-redeploy on push:
+
+> Railway dashboard → Service → Settings → Source → GitHub → select repo → branch `main`
+
+This is the one manual step per app. Everything else is automated.
+
+---
+
+## 8. Verify
 
 ```bash
 curl http://localhost:8000/healthz
