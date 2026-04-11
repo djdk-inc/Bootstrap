@@ -1,0 +1,36 @@
+.gitignore
+  933b4cb8da04b32a 3-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "77565f48aa3a0c7fcf1091bd6f47fbf4437035af",
+  "prompts": {
+    "5e5472691e1f4886": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "dc6f36a9-36e4-4c0d-9ea2-61a7ae1d4e2a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 427,
+      "overriden_lines": 0
+    },
+    "933b4cb8da04b32a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02192725-c52a-45be-83b8-806642744792",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Dongjae Kim",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 130,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
