@@ -1,12 +1,12 @@
 import os
 import secrets
-
-from dotenv import load_dotenv
-load_dotenv()
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+
+from dotenv import load_dotenv
+load_dotenv()
 
 import requests as http_client
 from fastapi import FastAPI, HTTPException
@@ -19,6 +19,8 @@ RAILWAY_API_TOKEN     = os.environ["RAILWAY_API_TOKEN"]
 CLOUDFLARE_API_TOKEN  = os.environ["CLOUDFLARE_API_TOKEN"]
 CLOUDFLARE_ACCOUNT_ID = os.environ["CLOUDFLARE_ACCOUNT_ID"]
 CLOUDFLARE_TEAM       = os.environ["CLOUDFLARE_TEAM"]
+
+RAILWAY_GQL = "https://backboard.railway.app/graphql/v2"
 
 def _resolve_github_owner() -> str:
     override = os.environ.get("GITHUB_DEFAULT_OWNER", "")
@@ -56,6 +58,12 @@ class CreateAppResponse(BaseModel):
     deploy_status: str
     github_repo_name: str
     app_secret: str
+
+class ProvisionExistingRequest(BaseModel):
+    repo_full_name: str          # e.g. "djdk-inc/WhatDoIOweYou"
+    app_name: str                # Railway project + Cloudflare app name
+    env_vars: dict[str, str] = Field(default_factory=dict)
+    allowed_emails: list[str] = Field(default_factory=list)
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -106,27 +114,94 @@ def push_to_github(d: str, repo_full_name: str) -> None:
     run(["git", "commit", "-m", "Bootstrap initial files"], cwd=d, extra_env=git_env)
     run(["git", "push", "-u", "origin", "main"], cwd=d, extra_env=git_env)
 
-# ── Railway ────────────────────────────────────────────────────────────────────
+# ── Railway (GraphQL API — no CLI) ─────────────────────────────────────────────
 
-def provision_railway(d: str, app_name: str, env_vars: dict[str, str]) -> dict:
-    renv = {"RAILWAY_TOKEN": RAILWAY_API_TOKEN}
-    run(["railway", "project", "create", "--name", app_name], cwd=d, extra_env=renv)
-    for key, value in env_vars.items():
-        run(["railway", "variables", "--set", f"{key}={value}"], cwd=d, extra_env=renv)
-    run(["railway", "up", "--detach"], cwd=d, extra_env=renv)
-    domain = run(["railway", "domain"], cwd=d, extra_env=renv)
-    live_url = (
-        domain if domain.startswith("http")
-        else f"https://{domain}" if domain
-        else f"https://{app_name}.up.railway.app"
+def _railway_gql(query: str, variables: dict | None = None) -> dict:
+    resp = http_client.post(
+        RAILWAY_GQL,
+        headers={"Authorization": f"Bearer {RAILWAY_API_TOKEN}", "Content-Type": "application/json"},
+        json={"query": query, **({"variables": variables} if variables else {})},
+        timeout=30,
     )
-    # NOTE: one-time manual step — connect GitHub repo for auto-redeploy:
-    #   Railway dashboard → Service → Settings → Source → GitHub → repo → branch main
-    return {"live_url": live_url, "deploy_status": "deploying", "renv": renv}
+    resp.raise_for_status()
+    data = resp.json()
+    if "errors" in data:
+        raise HTTPException(status_code=500, detail=f"Railway API: {data['errors']}")
+    return data["data"]
 
-def set_railway_vars(d: str, renv: dict, vars: dict[str, str]) -> None:
-    for key, value in vars.items():
-        run(["railway", "variables", "--set", f"{key}={value}"], cwd=d, extra_env=renv)
+def provision_railway(app_name: str, repo_full_name: str, env_vars: dict[str, str]) -> dict:
+    # 1. Create project — returns project id + default environment
+    project = _railway_gql("""
+        mutation CreateProject($input: ProjectCreateInput!) {
+            projectCreate(input: $input) {
+                id
+                environments { edges { node { id name } } }
+            }
+        }
+    """, {"input": {"name": app_name}})["projectCreate"]
+    project_id = project["id"]
+    env_id = project["environments"]["edges"][0]["node"]["id"]
+
+    # 2. Create service connected to GitHub repo
+    service_id = _railway_gql("""
+        mutation CreateService($input: ServiceCreateInput!) {
+            serviceCreate(input: $input) { id }
+        }
+    """, {"input": {
+        "projectId": project_id,
+        "name":      app_name,
+        "source":    {"repo": repo_full_name},
+        "branch":    "main",
+    }})["serviceCreate"]["id"]
+
+    # 3. Set env vars (triggers first deploy)
+    if env_vars:
+        _railway_gql("""
+            mutation UpsertVars($input: VariableCollectionUpsertInput!) {
+                variableCollectionUpsert(input: $input)
+            }
+        """, {"input": {
+            "projectId":     project_id,
+            "environmentId": env_id,
+            "serviceId":     service_id,
+            "variables":     env_vars,
+        }})
+
+    # 4. Generate Railway-provided domain
+    domain = _railway_gql("""
+        mutation CreateDomain($input: ServiceDomainCreateInput!) {
+            serviceDomainCreate(input: $input) { domain }
+        }
+    """, {"input": {"environmentId": env_id, "serviceId": service_id}})["serviceDomainCreate"]["domain"]
+
+    return {
+        "live_url":    f"https://{domain}",
+        "deploy_status": "deploying",
+        "project_id": project_id,
+        "service_id": service_id,
+        "env_id":     env_id,
+    }
+
+def set_railway_vars(railway: dict, vars: dict[str, str]) -> None:
+    if not vars:
+        return
+    _railway_gql("""
+        mutation UpsertVars($input: VariableCollectionUpsertInput!) {
+            variableCollectionUpsert(input: $input)
+        }
+    """, {"input": {
+        "projectId":     railway["project_id"],
+        "environmentId": railway["env_id"],
+        "serviceId":     railway["service_id"],
+        "variables":     vars,
+        "skipDeploys":   True,
+    }})
+
+def delete_railway_project(project_id: str) -> None:
+    try:
+        _railway_gql("mutation Delete($id: String!) { projectDelete(id: $id) }", {"id": project_id})
+    except Exception:
+        pass  # best-effort cleanup
 
 # ── Cloudflare ─────────────────────────────────────────────────────────────────
 
@@ -216,6 +291,7 @@ def create_app(payload: CreateAppRequest):
 
     app_secret = secrets.token_hex(32)
     repo = create_github_repo(payload.name)
+    railway = None
     try:
         with tempfile.TemporaryDirectory() as d:
             populate_dir(d, payload.template, {
@@ -225,17 +301,17 @@ def create_app(payload: CreateAppRequest):
             })
             push_to_github(d, repo["full_name"])
 
-            railway = provision_railway(d, payload.name, {
-                **payload.env_vars,
-                "APP_SECRET": app_secret,
-            })
+        railway = provision_railway(payload.name, repo["full_name"], {
+            **payload.env_vars,
+            "APP_SECRET": app_secret,
+        })
 
-            cf = provision_cloudflare(payload.name, railway["live_url"], payload.allowed_emails)
+        cf = provision_cloudflare(payload.name, railway["live_url"], payload.allowed_emails)
 
-            set_railway_vars(d, railway["renv"], {
-                "CLOUDFLARE_AUD":  cf["aud"],
-                "CLOUDFLARE_TEAM": CLOUDFLARE_TEAM,
-            })
+        set_railway_vars(railway, {
+            "CLOUDFLARE_AUD":  cf["aud"],
+            "CLOUDFLARE_TEAM": CLOUDFLARE_TEAM,
+        })
 
         set_github_secrets(repo["full_name"], {
             "CLOUDFLARE_API_TOKEN":  CLOUDFLARE_API_TOKEN,
@@ -246,6 +322,8 @@ def create_app(payload: CreateAppRequest):
 
     except Exception:
         delete_github_repo(repo["full_name"])
+        if railway:
+            delete_railway_project(railway["project_id"])
         raise
 
     return CreateAppResponse(
@@ -253,5 +331,44 @@ def create_app(payload: CreateAppRequest):
         live_url=railway["live_url"],
         deploy_status=railway["deploy_status"],
         github_repo_name=repo["full_name"],
+        app_secret=app_secret,
+    )
+
+
+@app.post("/provision-existing", response_model=CreateAppResponse)
+def provision_existing(payload: ProvisionExistingRequest):
+    """Provision Railway + Cloudflare for a GitHub repo that already exists."""
+    app_secret = secrets.token_hex(32)
+    railway = None
+    try:
+        railway = provision_railway(payload.app_name, payload.repo_full_name, {
+            **payload.env_vars,
+            "APP_SECRET": app_secret,
+        })
+
+        cf = provision_cloudflare(payload.app_name, railway["live_url"], payload.allowed_emails)
+
+        set_railway_vars(railway, {
+            "CLOUDFLARE_AUD":  cf["aud"],
+            "CLOUDFLARE_TEAM": CLOUDFLARE_TEAM,
+        })
+
+        set_github_secrets(payload.repo_full_name, {
+            "CLOUDFLARE_API_TOKEN":  CLOUDFLARE_API_TOKEN,
+            "CLOUDFLARE_ACCOUNT_ID": CLOUDFLARE_ACCOUNT_ID,
+            "CLOUDFLARE_APP_ID":     cf["app_id"],
+            "CLOUDFLARE_POLICY_ID":  cf["policy_id"],
+        })
+
+    except Exception:
+        if railway:
+            delete_railway_project(railway["project_id"])
+        raise
+
+    return CreateAppResponse(
+        repo_url=f"https://github.com/{payload.repo_full_name}",
+        live_url=railway["live_url"],
+        deploy_status=railway["deploy_status"],
+        github_repo_name=payload.repo_full_name,
         app_secret=app_secret,
     )

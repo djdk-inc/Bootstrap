@@ -80,24 +80,6 @@ if ! has gh; then
 fi
 success "gh $(gh --version | head -1 | awk '{print $3}')"
 
-# node / npm (required for railway CLI)
-if ! has npm; then
-  if [ "$PLATFORM" = "mac" ]; then
-    install node
-  else
-    info "Installing Node.js via NodeSource..."
-    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-    sudo apt-get install -y nodejs
-  fi
-fi
-success "node $(node --version)"
-
-# railway CLI
-if ! has railway; then
-  info "Installing Railway CLI..."
-  npm install -g @railway/cli
-fi
-success "railway $(railway --version 2>&1 | head -1)"
 
 # ── Python venv ────────────────────────────────────────────────────────────────
 
@@ -120,7 +102,7 @@ echo ""
 if [ ! -f .env ]; then
   cat > .env <<'EOF'
 GITHUB_TOKEN=
-RAILWAY_API_TOKEN=
+RAILWAY_API_TOKEN=      # from railway.app → Account Settings → Tokens (workspace-scoped token works)
 CLOUDFLARE_API_TOKEN=
 CLOUDFLARE_ACCOUNT_ID=
 CLOUDFLARE_TEAM=

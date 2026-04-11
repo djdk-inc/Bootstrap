@@ -1,3 +1,5 @@
 {
-  "start": "python task/main.py run"
+  "deploy": {
+    "startCommand": "python task/main.py run"
+  }
 }
